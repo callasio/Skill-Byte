@@ -1,15 +1,28 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
+use tauri::State;
+use crate::selenium::session::DriverSession;
+
+mod selenium;
+mod codeforces;
+
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
+#[tauri::command]
+async fn start_driver(driver_session_state: State<'_, DriverSession>) -> Result<(), String> {
+    driver_session_state.start().await; // TODO: Error Handling
+
+    Ok(())
+}
+
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![greet])
+        .manage(DriverSession::default())
+        .invoke_handler(tauri::generate_handler![greet, start_driver])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
