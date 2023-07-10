@@ -33,7 +33,7 @@ impl DriverSession {
             session_locked.clone().unwrap().quit().await?;
         }
 
-        *session_locked = Some(Self::new_driver("https://codeforces.com/").await?);
+        *session_locked = Some(Self::new_driver("localhost:1420").await?);
 
         Ok(())
     }
@@ -44,5 +44,25 @@ impl DriverSession {
         let capability = DesiredCapabilities::chrome();
 
         WebDriver::new(url, capability).await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn create_driver() {
+        use thirtyfour::DesiredCapabilities;
+
+        let mut caps = DesiredCapabilities::chrome();
+
+        caps.add_chrome_arg("--headless").unwrap();
+
+        let driver = WebDriver::new("http://localhost:9515", caps).await.unwrap();
+        driver.goto("https://codeforces.com/").await.unwrap();
+
+        let title = driver.title().await.unwrap();
+        assert_eq!(title, "Codeforces")
     }
 }
