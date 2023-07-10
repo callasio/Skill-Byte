@@ -20,6 +20,7 @@ thirtyfour = "0.31.0"
 tokio = { version = "1", features = ["full"] }
 thiserror = "1.0.43"
 reqwest = "0.11.18"
+zip = "0.6.6"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem
