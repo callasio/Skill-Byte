@@ -1,0 +1,54 @@
+plugins {
+  id 'java'
+  id 'org.jetbrains.kotlin.jvm' version '1.8.21'
+  id 'io.qameta.allure' version '2.9.3'
+}
+
+group 'com.skill.byte'
+version '1.0-SNAPSHOT'
+
+repositories {
+  mavenCentral()
+}
+
+ext {
+  allureVersion = '2.22.0'
+  fluentleniumVersion = '5.0.4'
+  junitVersion = '5.9.3'
+}
+
+sourceCompatibility = '17'
+targetCompatibility = '17'
+
+tasks.withType(JavaCompile) {
+  options.encoding = 'UTF-8'
+}
+
+[compileKotlin, compileTestKotlin].forEach {
+  it.kotlinOptions {
+        jvmTarget = '11'
+      }
+}
+
+dependencies {
+    testImplementation('com.codeborne:selenide:6.13.1')
+    testImplementation("io.qameta.allure:allure-selenide:${allureVersion}")
+  testImplementation("org.fluentlenium:fluentlenium-core:${fluentleniumVersion}")
+  testImplementation("org.fluentlenium:fluentlenium-assertj:${fluentleniumVersion}")
+  testImplementation("org.fluentlenium:fluentlenium-junit-jupiter:${fluentleniumVersion}")
+  testImplementation('org.assertj:assertj-core:3.24.2')
+  testImplementation('org.slf4j:slf4j-simple:2.0.7')
+
+  testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
+  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
+}
+
+test {
+  useJUnitPlatform()  }
+allure {
+  autoconfigure = true
+  version = "${allureVersion}"
+
+    useJUnit5 {
+    version = "${allureVersion}"
+  }}
