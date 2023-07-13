@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use tauri::State;
+use crate::selenium::chrome_driver::ChromeDriver;
 use crate::selenium::session::DriverSession;
 
 mod selenium;
@@ -13,8 +14,9 @@ fn greet(name: &str) -> String {
 }
 
 #[tauri::command]
-async fn start_driver(driver_session_state: State<'_, DriverSession>) -> Result<(), String> {
-    driver_session_state.start().await; // TODO: Error Handling
+async fn start_driver(driver_session_state: State<'_, DriverSession>) -> Result<(), error::ProjectError> {
+    ChromeDriver::start().await?;
+    driver_session_state.start().await?;
 
     Ok(())
 }
