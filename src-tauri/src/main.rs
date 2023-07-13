@@ -28,3 +28,25 @@ fn main() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+
+mod error {
+    use serde::Serializer;
+    use thirtyfour::error::WebDriverError;
+    use crate::selenium::chrome_driver::error::ChromeDriverError;
+
+    #[derive(Debug, thiserror::Error)]
+    pub enum ProjectError {
+        #[error("Error occurred in chrome driver.")]
+        ChromeDriverError(#[from] ChromeDriverError),
+        #[error("Error occurred in web driver code.")]
+        WebDriverError(#[from] WebDriverError)
+    }
+
+    impl serde::Serialize for ProjectError {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where S: Serializer
+        {
+            serializer.serialize_str(self.to_string().as_ref())
+        }
+    }
+}
