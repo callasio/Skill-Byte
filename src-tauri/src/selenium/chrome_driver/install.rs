@@ -1,16 +1,8 @@
 use super::error::DownloadError;
 
-static DRIVER_PATH: &str = "./web_driver/";
-static DOWNLOAD_FILE_NAME: &str = "driver.zip";
-
-#[cfg(target_os = "windows")]
-static DRIVER_FILE_NAME: &str = "chrome_driver.exe";
-#[cfg(any(target_os = "macos", target_os = "linux"))]
-static DRIVER_FILE_NAME: &str = "chrome_driver";
-
 impl super::ChromeDriver {
     pub(super) async fn install(&self) -> Result<(), DownloadError> {
-        if Self::is_installed() {
+        if self.is_installed() {
             return Ok(());
         }
 
@@ -20,16 +12,14 @@ impl super::ChromeDriver {
         Ok(())
     }
 
-    pub fn is_installed() -> bool {
-        let file_path = format!("{DRIVER_PATH}{DRIVER_FILE_NAME}");
-
-        std::fs::metadata(file_path).is_ok()
+    pub fn is_installed(&self) -> bool {
+        std::fs::metadata(&self.execution_file_path).is_ok()
     }
 
     async fn download(&self) -> Result<(), DownloadError> {
-        let _ = std::fs::create_dir(DRIVER_PATH);
+        let _ = std::fs::create_dir(super::DRIVER_PATH);
         let mut out = std::fs::File::create(format!(
-            "{DRIVER_PATH}{DOWNLOAD_FILE_NAME}"
+            "{}{}", super::DRIVER_PATH, super::DOWNLOAD_FILE_NAME
         ))?;
 
         let resp = reqwest::get(&self.download_url).await?;
@@ -43,11 +33,11 @@ impl super::ChromeDriver {
 
     fn extract(&self) -> Result<(), DownloadError> {
         let file_read = std::fs::File::open(
-            format!("{DRIVER_PATH}{DOWNLOAD_FILE_NAME}")
+            format!("{}{}", super::DRIVER_PATH, super::DOWNLOAD_FILE_NAME)
         ).unwrap();
 
         let mut zip_arch = zip::ZipArchive::new(file_read)?;
-        zip_arch.extract(DRIVER_PATH)?;
+        zip_arch.extract(super::DRIVER_PATH)?;
 
         Ok(())
     }
