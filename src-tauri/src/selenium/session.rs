@@ -27,13 +27,13 @@ impl DriverSession {
     async fn start_driver_session(
         session: &Mutex<Option<WebDriver>>
     ) -> WebDriverResult<()> {
-        let mut session_locked = session.lock().await;
+        let mut session_guard = session.lock().await;
 
-        if session_locked.is_some() {
-            session_locked.clone().unwrap().quit().await?;
+        if session_guard.is_some() {
+            unreachable!();
         }
 
-        *session_locked = Some(Self::new_driver("localhost:1420").await?);
+        *session_guard = Some(Self::new_driver("localhost:1420").await?);
 
         Ok(())
     }
