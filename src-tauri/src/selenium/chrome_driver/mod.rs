@@ -6,9 +6,9 @@ use error::*;
 
 #[allow(dead_code)]
 pub struct ChromeDriver {
-    latest_release_version: String,
     download_url: String,
-    os: String
+    execution_file_path: String,
+    execution_process: Mutex<Option<Child>>
 }
 
 impl ChromeDriver {

@@ -1,15 +1,15 @@
+use tokio::sync::Mutex;
 use super::error::ConstructError;
 
 impl super::ChromeDriver {
     pub(super) async fn new() -> Result<Self, ConstructError> {
         let latest_release_version = Self::get_latest_release_version().await?;
         let download_url = Self::download_url(&latest_release_version)?;
-        let os = Self::get_os()?;
 
         Ok(Self {
-            latest_release_version,
             download_url,
-            os
+            execution_file_path: format!("{}{}", super::DRIVER_PATH, super::DRIVER_FILE_NAME),
+            execution_process: Mutex::new(None)
         })
     }
 
