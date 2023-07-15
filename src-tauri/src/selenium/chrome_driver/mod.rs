@@ -24,6 +24,7 @@ impl ChromeDriver {
     pub async fn start() -> Result<(), ChromeDriverError> {
         let chrome_driver = Self::new().await?;
         chrome_driver.install().await?;
+        chrome_driver.execute().await?;
 
         Ok(())
     }
