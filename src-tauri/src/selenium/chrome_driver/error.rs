@@ -6,7 +6,9 @@ pub enum ChromeDriverError {
     #[error("While constructing chrome driver instance")]
     ConstructError(#[from] ConstructError),
     #[error("While downloading chrome driver from google api")]
-    DownloadError(#[from] DownloadError)
+    DownloadError(#[from] DownloadError),
+    #[error("While executing chrome driver execution file.")]
+    ExecutionError(#[from] ExecutionError)
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -27,4 +29,10 @@ pub enum DownloadError {
     HttpRequestError(#[from] reqwest::Error),
     #[error("Error while extracting zip file.")]
     ExtractZipError(#[from] zip::result::ZipError)
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum ExecutionError {
+    #[error("Error while executing chromedriver execution file")]
+    ExecutionError(#[from] std::io::Error)
 }
