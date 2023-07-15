@@ -54,15 +54,20 @@ mod tests {
     #[tokio::test]
     async fn create_driver() {
         use thirtyfour::DesiredCapabilities;
+        
+        crate::selenium::chrome_driver::ChromeDriver::start().await.unwrap();
 
         let mut caps = DesiredCapabilities::chrome();
-
         caps.add_chrome_arg("--headless").unwrap();
 
         let driver = WebDriver::new("http://localhost:9515", caps).await.unwrap();
-        driver.goto("https://codeforces.com/").await.unwrap();
 
+        driver.goto("https://codeforces.com/").await.unwrap();
         let title = driver.title().await.unwrap();
-        assert_eq!(title, "Codeforces")
+        assert_eq!(title, "Codeforces");
+
+        driver.goto("https://www.acmicpc.net/").await.unwrap();
+        let title = driver.title().await.unwrap();
+        assert_eq!(title, "Baekjoon Online Judge");
     }
 }

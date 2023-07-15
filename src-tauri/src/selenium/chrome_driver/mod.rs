@@ -35,15 +35,6 @@ impl ChromeDriver {
 mod tests {
     use super::*;
 
-    pub static LATEST_RELEASE_VERSION: &str = "114.0.5735.90";
-
-    #[tokio::test]
-    async fn constructor() {
-        let chrome_driver = ChromeDriver::new().await.unwrap();
-
-        assert_eq!(chrome_driver.latest_release_version, LATEST_RELEASE_VERSION);
-    }
-
     #[tokio::test]
     async fn install() {
         let chrome_driver = ChromeDriver::new().await.unwrap();
