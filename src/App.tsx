@@ -1,7 +1,8 @@
-import { useState } from "react";
+import {useState} from "react";
 import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/tauri";
+import {invoke} from "@tauri-apps/api/tauri";
 import "./App.css";
+import {exit} from "@tauri-apps/api/process";
 
 function App() {
   const [greetMsg, setGreetMsg] = useState("");
@@ -9,7 +10,7 @@ function App() {
 
   async function greet() {
     // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-    setGreetMsg(await invoke("greet", { name }));
+    setGreetMsg(await invoke("greet", {name}));
   }
 
   return (
@@ -18,13 +19,13 @@ function App() {
 
       <div className="row">
         <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
+          <img src="/vite.svg" className="logo vite" alt="Vite logo"/>
         </a>
         <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
+          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo"/>
         </a>
         <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
+          <img src={reactLogo} className="logo react" alt="React logo"/>
         </a>
       </div>
 
@@ -32,9 +33,10 @@ function App() {
 
       <form
         className="row"
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
-          greet();
+          await greet();
+          await invoke("start_driver");
         }}
       >
         <input
@@ -43,6 +45,16 @@ function App() {
           placeholder="Enter a name..."
         />
         <button type="submit">Greet</button>
+      </form>
+
+      <form
+        className="row"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          await invoke("exit");
+        }}
+      >
+        <button type="submit">Exit</button>
       </form>
 
       <p>{greetMsg}</p>
