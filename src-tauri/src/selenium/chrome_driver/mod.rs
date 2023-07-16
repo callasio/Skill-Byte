@@ -21,12 +21,11 @@ pub struct ChromeDriver {
 }
 
 impl ChromeDriver {
-    pub async fn start() -> Result<(), ChromeDriverError> {
-        let chrome_driver = Self::new().await?;
-        chrome_driver.install().await?;
-        chrome_driver.execute().await?;
+    pub async fn start(&self) -> Result<u32, ChromeDriverError> {
+        self.install().await?;
+        self.execute().await?;
 
-        Ok(())
+        Ok(9515) // TODO: Get port number
     }
 }
 
