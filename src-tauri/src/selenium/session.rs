@@ -1,73 +1,101 @@
 use thirtyfour::error::WebDriverResult;
 use tokio::sync::Mutex;
 use thirtyfour::WebDriver;
+use crate::mutex::option::unwrap;
+
+#[derive(Debug, Copy, Clone, Default)]
+pub struct Port(pub u32);
+
+impl Port {
+    fn to_url(self) -> String {
+        println!("http://localhost:{}", self.0);
+        format!("http://localhost:{}", self.0)
+    }
+}
 
 #[derive(Default)]
-pub(crate) struct DriverSession {
+pub struct DriverSession {
+    pub port: Mutex<Port>,
     problem: Mutex<Option<WebDriver>>,
     contest: Mutex<Option<WebDriver>>,
     standing: Mutex<Option<WebDriver>>
 }
 
 impl DriverSession {
-    pub(crate) async fn start(&self) -> WebDriverResult<()> {
-        let futures = vec![
-            Self::start_driver_session(&self.problem),
-            Self::start_driver_session(&self.contest),
-            Self::start_driver_session(&self.standing)
-        ];
+    pub async fn start(&self, port: Port) -> WebDriverResult<()> {
+        *self.port.lock().await = port;
+        let host_url = port.to_url();
 
-        for future in futures {
-            future.await?;
-        }
+        Self::start_driver_session(&self.problem, &host_url).await?;
+        Self::start_driver_session(&self.contest, &host_url).await?;
+        Self::start_driver_session(&self.standing, &host_url).await?;
 
         Ok(())
     }
 
     async fn start_driver_session(
-        session: &Mutex<Option<WebDriver>>
+        session: &Mutex<Option<WebDriver>>,
+        host_url: &str
     ) -> WebDriverResult<()> {
-        let mut session_guard = session.lock().await;
+        *session.lock().await = Some(Self::new_driver(host_url).await?);
 
-        if session_guard.is_some() {
-            unreachable!();
-        }
-
-        *session_guard = Some(Self::new_driver("localhost:1420").await?);
+        unwrap!(session, {
+            session.goto("https://codeforces.com/").await?;
+        });
 
         Ok(())
     }
 
-    async fn new_driver(url: &str) -> WebDriverResult<WebDriver> {
+    async fn new_driver(host_url: &str) -> WebDriverResult<WebDriver> {
         use thirtyfour::DesiredCapabilities;
 
-        let capability = DesiredCapabilities::chrome();
+        let mut capabilities = DesiredCapabilities::chrome();
+        // capabilities.add_chrome_arg("--headless")?;
 
-        WebDriver::new(url, capability).await
+        WebDriver::new(host_url, capabilities).await
+    }
+
+    pub async fn exit(&self) -> WebDriverResult<()> {
+        let problem = &self.problem;
+        let contest = &self.contest;
+        let standing = &self.standing;
+
+        unwrap!(problem, {
+            problem.clone().quit().await?
+        });
+
+        unwrap!(contest, {
+            contest.clone().quit().await?
+        });
+
+        unwrap!(standing, {
+            standing.clone().quit().await?
+        });
+
+        Ok(())
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::selenium::chrome_driver::ChromeDriver;
 
     #[tokio::test]
-    async fn create_driver() {
-        use thirtyfour::DesiredCapabilities;
-        
-        crate::selenium::chrome_driver::ChromeDriver::start().await.unwrap();
+    async fn start_driver() {
+        let chrome_driver = ChromeDriver::new().await.unwrap();
+        let port_num = chrome_driver.start().await.unwrap();
+        let driver = DriverSession::default();
+        driver.start(Port(port_num)).await.unwrap();
 
-        let mut caps = DesiredCapabilities::chrome();
-        caps.add_chrome_arg("--headless").unwrap();
+        let contest = &driver.contest;
 
-        let driver = WebDriver::new("http://localhost:9515", caps).await.unwrap();
+        unwrap!(contest, {
+            assert_eq!(contest.title().await.unwrap(), "Codeforces");
+            contest.goto("https://www.acmicpc.net/").await.unwrap();
+            assert_eq!(contest.title().await.unwrap(), "Baekjoon Online Judge");
+        });
 
-        driver.goto("https://codeforces.com/").await.unwrap();
-        let title = driver.title().await.unwrap();
-        assert_eq!(title, "Codeforces");
-
-        driver.goto("https://www.acmicpc.net/").await.unwrap();
-        let title = driver.title().await.unwrap();
-        assert_eq!(title, "Baekjoon Online Judge");
+        driver.exit().await.unwrap();
     }
 }
